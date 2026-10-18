@@ -18,6 +18,7 @@ namespace ChessPad.WpfUi
             builder.RegisterType<ChessPadViewModel>().AsSelf();
             builder.RegisterType<ChessBoardViewModel>().AsSelf();
             builder.RegisterType<FieldViewModel>().AsSelf();
+            builder.RegisterType<RowColumnLabelViewModel>().AsSelf();
             _container = builder.Build();
         }
 

@@ -36,7 +36,8 @@ src
 |   |-- ChessPad.ViewModels.csproj
 |   |-- ChessPadViewModel.cs
 |   |-- ChessBoardViewModel.cs
-|   `-- FieldViewModel.cs
+|   |-- FieldViewModel.cs
+|   `-- RowColumnLabelViewModel.cs
 `-- ChessPad.WpfUi
 	|-- ChessPad.WpfUi.csproj
 	|-- App.xaml
@@ -87,11 +88,9 @@ The runtime object graph is:
 MainWindow
 `-- DataContext: ChessPadViewModel
 	`-- ChessBoard: ChessBoardViewModel
-		`-- Fields: IReadOnlyList<FieldViewModel>
-			|-- FieldViewModel(Row: 0, Column: 0)
-			|-- FieldViewModel(Row: 0, Column: 1)
-			|-- ...
-			`-- FieldViewModel(Row: 7, Column: 7)
+		|-- Fields: IReadOnlyList<FieldViewModel> (64 fields)
+		|-- RowLabels: IReadOnlyList<RowColumnLabelViewModel> (8 ranks)
+		`-- ColumnLabels: IReadOnlyList<RowColumnLabelViewModel> (8 files)
 ```
 
 ### ChessPadViewModel: application-level composition
@@ -118,15 +117,17 @@ leaves the application-level view model focused on composition.
 
 ### ChessBoardViewModel: board structure
 
-`ChessBoardViewModel` receives a `FieldViewModel.Factory` delegate. Its constructor:
+`ChessBoardViewModel` receives `FieldViewModel.Factory` and
+`RowColumnLabelViewModel.Factory` delegates. Its constructor:
 
-1. Allocates a list with capacity for 64 fields.
-2. Iterates over rows 0 through 7.
-3. Iterates over columns 0 through 7 within each row.
-4. Calls the injected factory once for each coordinate pair.
-5. Exposes a read-only wrapper through `Fields`.
+1. Creates eight rank labels and eight file labels using the label factory.
+2. Exposes those collections through read-only `RowLabels` and `ColumnLabels`.
+3. Allocates a list with capacity for 64 fields.
+4. Iterates over rows 0 through 7 and columns 0 through 7 within each row.
+5. Calls the field factory once for each coordinate pair.
+6. Exposes a read-only wrapper through `Fields`.
 
-Its public collection is:
+Its field collection is:
 
 ```csharp
 public IReadOnlyList<FieldViewModel> Fields { get; }
@@ -181,19 +182,42 @@ column = index % 8
 ```
 
 The view lays out these items from left to right, then top to bottom. Therefore,
-`(0, 0)` appears at the top-left and `(7, 7)` at the bottom-right. The current
-implementation does not translate these coordinates to chess notation such as
-`a1` or change orientation for the player's color.
+`(0, 0)` appears at the top-left and `(7, 7)` at the bottom-right.
+
+### Rank and file labels
+
+Chess rows are called **ranks** and use numbers 1 through 8. Columns are called
+**files** and use letters A through H (traditionally lowercase in notation).
+The board displays White's perspective: A through H from left to right and
+8 through 1 from top to bottom. Thus `(0, 0)` corresponds to A8 and `(7, 7)`
+corresponds to H1. Board inversion is not implemented.
+
+`ChessBoardViewModel` exposes two read-only collections of eight
+`RowColumnLabelViewModel` records:
+
+- `RowLabels`: `8, 7, 6, 5, 4, 3, 2, 1` for the left and right edges.
+- `ColumnLabels`: `A, B, C, D, E, F, G, H` for the top and bottom edges.
+
+Each label has an `Index` (0 through 7, in visual order) and a `Label` string.
+These are presentation coordinates, not additional board fields. The same row
+collection is rendered on both vertical edges, and the same column collection
+on both horizontal edges: 16 label objects produce 32 visible labels.
+
+The board receives `RowColumnLabelViewModel.Factory` through constructor
+injection. Autofac supplies the delegate from the label type's registration.
+Its `Index` and `Label` parameters match the record constructor names exactly,
+just as the field factory's parameters do. The view models remain independent
+of WPF and carry no pixel positions or brushes.
 
 The parity expression `(Row + Column) % 2 == 0` gives alternating colors across
 both axes. The current presentation intentionally starts with a light field at
-the top-left.
+the top-left. Labels do not change the field ordering or colors.
 
 ## Dependency injection with Autofac
 
 ### Registrations
 
-`App.xaml.cs` registers the window and all three view-model types:
+`App.xaml.cs` registers the window and all four view-model types:
 
 ```csharp
 var builder = new ContainerBuilder();
@@ -201,6 +225,7 @@ builder.RegisterType<MainWindow>().AsSelf();
 builder.RegisterType<ChessPadViewModel>().AsSelf();
 builder.RegisterType<ChessBoardViewModel>().AsSelf();
 builder.RegisterType<FieldViewModel>().AsSelf();
+builder.RegisterType<RowColumnLabelViewModel>().AsSelf();
 _container = builder.Build();
 ```
 
@@ -218,7 +243,9 @@ created rather than registered as global integer dependencies.
 The board's constructor accepts:
 
 ```csharp
-public ChessBoardViewModel(FieldViewModel.Factory createField)
+public ChessBoardViewModel(
+    FieldViewModel.Factory createField,
+    RowColumnLabelViewModel.Factory createLabel)
 ```
 
 It creates each field with:
@@ -259,7 +286,9 @@ Resolve<MainWindow>()
   -> resolve ChessPadViewModel
 	 -> resolve ChessBoardViewModel
 		-> provide FieldViewModel.Factory
-		-> invoke factory 64 times with coordinates
+		-> provide RowColumnLabelViewModel.Factory
+		-> create 8 rank labels and 8 file labels
+		-> create 64 fields with coordinates
   -> initialize window and assign its DataContext
 ```
 
@@ -345,8 +374,15 @@ Each field template uses a `Border` with a dark background by default. A
 Window, frame, light-field, and dark-field brushes reference `BoardColors`.
 
 A `Viewbox` with `Stretch="Uniform"` scales the fixed-size board container while
-preserving its aspect ratio. The board container is 400 by 400 units, includes
-an 8-unit border, and sits inside the viewbox with a margin of 10.
+preserving its aspect ratio. The container is 448 by 448 units, includes an
+8-unit border, and sits inside the viewbox with a margin of 10. A three-by-three
+layout grid reserves a 24-unit strip on each edge for labels, leaving the field
+area at its previous 384 by 384 units. Each label strip uses an eight-cell
+`UniformGrid`, so label centers align with field centers while resizing.
+
+An implicit `RowColumnLabelViewModel` data template renders centered text using
+the existing light-field brush against the dark board frame. Field templates
+continue to use their existing background trigger; no label overlays a field.
 
 ### Change notifications
 
@@ -401,8 +437,11 @@ A useful manual check is:
 2. Confirm that the board displays 8 rows and 8 columns.
 3. Check that colors alternate horizontally and vertically, with a light field
    at the top-left.
-4. Resize the window and confirm that the board remains square.
-5. Close the window and confirm that the application exits normally.
+4. Confirm A through H appear left to right along both horizontal edges and
+   8 through 1 appear top to bottom along both vertical edges.
+5. Resize the window and confirm that the board remains square and all labels
+   remain centered against their corresponding fields.
+6. Close the window and confirm that the application exits normally.
 
 For automated verification of this design, check the actual object graph and
 observable results, not only whether individual constructors compile:
@@ -410,9 +449,13 @@ observable results, not only whether individual constructors compile:
 - Resolve the application view model through the registered container.
 - Confirm that `ChessBoard.Fields` contains exactly 64 entries.
 - Check every entry's row, column, and parity against its row-major index.
-- Confirm that factory calls produce distinct object instances.
+- Confirm that field and label factory calls produce distinct object instances.
+- Check that each label collection contains exactly eight entries, with indices
+  0 through 7, rank text `87654321`, and file text `ABCDEFGH`.
 - Confirm that `MainWindow.DataContext` is a `ChessPadViewModel` and that the
   board `ItemsControl.ItemsSource` refers to its `ChessBoard.Fields` collection.
+- Verify all 32 rendered labels across the four edges, including their text and
+  center alignment with fields at multiple window sizes.
 
 These are verification guidelines, not a claim that a persistent automated test
 suite is included with this documentation.

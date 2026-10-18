@@ -14,34 +14,65 @@
 		<SolidColorBrush x:Key="BoardFrameBrush" Color="{x:Static views:BoardColors.BoardFrame}" />
 		<SolidColorBrush x:Key="LightSquareBrush" Color="{x:Static views:BoardColors.LightSquare}" />
 		<SolidColorBrush x:Key="DarkSquareBrush" Color="{x:Static views:BoardColors.DarkSquare}" />
+		<DataTemplate DataType="{x:Type viewmodels:RowColumnLabelViewModel}">
+			<TextBlock Text="{Binding Label}" Foreground="{StaticResource LightSquareBrush}"
+					   FontSize="16" FontWeight="SemiBold"
+					   HorizontalAlignment="Center" VerticalAlignment="Center" />
+		</DataTemplate>
+		<ItemsPanelTemplate x:Key="RowLabelPanel">
+			<UniformGrid Rows="8" Columns="1" />
+		</ItemsPanelTemplate>
+		<ItemsPanelTemplate x:Key="ColumnLabelPanel">
+			<UniformGrid Rows="1" Columns="8" />
+		</ItemsPanelTemplate>
 	</Window.Resources>
-    <Grid Background="{StaticResource WindowBackgroundBrush}">
-        <Viewbox Margin="10" Stretch="Uniform">
-            <Border Width="400" Height="400" Padding="0" Background="{StaticResource BoardFrameBrush}"
-                    BorderBrush="{StaticResource BoardFrameBrush}" BorderThickness="8">
-                <ItemsControl ItemsSource="{Binding ChessBoard.Fields}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Rows="8" Columns="8" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type viewmodels:FieldViewModel}">
-                            <Border>
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{StaticResource DarkSquareBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsLight}" Value="True">
-                                                <Setter Property="Background" Value="{StaticResource LightSquareBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+	<Grid Background="{StaticResource WindowBackgroundBrush}">
+		<Viewbox Margin="10" Stretch="Uniform">
+			<Border Width="448" Height="448" Padding="0" Background="{StaticResource BoardFrameBrush}"
+					BorderBrush="{StaticResource BoardFrameBrush}" BorderThickness="8">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="24" />
+						<RowDefinition Height="*" />
+						<RowDefinition Height="24" />
+					</Grid.RowDefinitions>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="24" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="24" />
+					</Grid.ColumnDefinitions>
+					<ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ChessBoard.ColumnLabels}"
+								  ItemsPanel="{StaticResource ColumnLabelPanel}" />
+					<ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ChessBoard.ColumnLabels}"
+								  ItemsPanel="{StaticResource ColumnLabelPanel}" />
+					<ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ChessBoard.RowLabels}"
+								  ItemsPanel="{StaticResource RowLabelPanel}" />
+					<ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding ChessBoard.RowLabels}"
+								  ItemsPanel="{StaticResource RowLabelPanel}" />
+					<ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ChessBoard.Fields}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="8" Columns="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type viewmodels:FieldViewModel}">
+                                <Border>
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{StaticResource DarkSquareBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLight}" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource LightSquareBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
             </Border>
         </Viewbox>
     </Grid>
