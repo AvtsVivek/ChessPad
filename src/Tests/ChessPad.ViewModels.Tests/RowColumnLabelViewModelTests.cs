@@ -1,5 +1,7 @@
 namespace ChessPad.ViewModels.Tests;
 
+/// <summary>Tests preservation of the position and text supplied to immutable coordinate labels.</summary>
+/// <remarks>Endpoint cases cover rank and file labels; complete board ordering is verified by ChessBoardViewModelTests.</remarks>
 [TestClass]
 public sealed class RowColumnLabelViewModelTests
 {

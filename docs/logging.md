@@ -47,7 +47,8 @@ and isolate file output. Only `ChessPad.WpfUi.IntegrationTests` is granted frien
 assembly access. The public parameterless constructor still uses the hardcoded
 selector and normal per-user log directory, with no test arguments or environment
 variables exposed in the running application. See
-[integration tests](development.md#running-integration-tests) for details.
+[integration tests](testing.md#integration-project-chesspadwpfuiintegrationtests)
+and [internal access](testing.md#internal-access-and-production-behavior) for details.
 
 ## Events and severity
 

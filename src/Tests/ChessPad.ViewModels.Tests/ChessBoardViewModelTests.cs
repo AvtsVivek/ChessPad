@@ -1,5 +1,10 @@
 namespace ChessPad.ViewModels.Tests;
 
+/// <summary>Tests board construction, factory contracts, coordinate ordering, labels, and read-only collections.</summary>
+/// <remarks>
+/// Each case supplies direct construction delegates and owns its board. Recording delegates
+/// verify both arguments and returned object identity without depending on Autofac or WPF.
+/// </remarks>
 [TestClass]
 public sealed class ChessBoardViewModelTests
 {

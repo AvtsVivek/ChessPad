@@ -14,7 +14,8 @@ legal moves, recording, replay, and board inversion are not implemented yet.
 | [Dependency injection and lifecycle](dependency-injection.md) | Autofac registrations, delegate factories, lifetimes, startup, and shutdown |
 | [Logging and diagnostics](logging.md) | Selecting Serilog or NLog, events, JSON output, rolling, retention, and failure handling |
 | [WPF presentation](wpf-presentation.md) | Data binding, board layout, colors, menu commands, title-bar icon, and theme resources |
-| [Development and troubleshooting](development.md) | Build and MSTest commands, unit and integration tests, process isolation, verification checklists, and common issues |
+| [Test projects](testing.md) | Unit and integration test architecture, case inventory, execution, friend access, isolation, and troubleshooting |
+| [Development and troubleshooting](development.md) | Build and MSTest commands, verification checklists, extension guidance, and common issues |
 
 Start with architecture for an overview. For a specific task, go directly to
 the relevant guide; implementation details have one primary home rather than

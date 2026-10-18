@@ -1,5 +1,7 @@
 namespace ChessPad.ViewModels.Tests;
 
+/// <summary>Tests the application view model's constructor-injected board composition.</summary>
+/// <remarks>Constructs dependencies directly and verifies reference identity without starting the UI or a container.</remarks>
 [TestClass]
 public sealed class ChessPadViewModelTests
 {

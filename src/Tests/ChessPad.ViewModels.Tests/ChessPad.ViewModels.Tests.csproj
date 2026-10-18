@@ -1,19 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Unit tests for the UI-independent view-model library. Tests construct models
+    with direct factory delegates: no WPF application, Autofac container, logging
+    backend, filesystem, or network is required. The net10.0 target keeps this
+    suite independent of the Windows-only presentation project.
+
+    Run from the repository root:
+      dotnet test .\src\Tests\ChessPad.ViewModels.Tests\ChessPad.ViewModels.Tests.csproj
+    The project is also included under Tests in src\ChessPad.slnx.
+  -->
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- The MSTest metapackage supplies the framework, adapter, and test SDK for VSTest/Test Explorer. -->
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.2.3" />
   </ItemGroup>
 
+  <!-- Makes MSTest attributes and assertions available to every test file as a global using. -->
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+  <!-- Reference only the production model library; container and WPF checks belong in the integration suite. -->
   <ItemGroup>
     <ProjectReference Include="..\..\App\ChessPad.ViewModels\ChessPad.ViewModels.csproj" />
   </ItemGroup>

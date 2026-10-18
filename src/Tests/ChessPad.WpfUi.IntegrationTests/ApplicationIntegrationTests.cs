@@ -3,6 +3,13 @@ using System.IO;
 
 namespace ChessPad.WpfUi.IntegrationTests;
 
+/// <summary>Coordinates isolated, real-application integration scenarios for both supported logging providers.</summary>
+/// <remarks>
+/// VSTest executes these parent tests, which launch IntegrationTestHost in separate processes.
+/// Each case owns its temporary logs and enforces a bounded execution time, allowing method-level
+/// parallelization without sharing WPF application instances or provider state. Normal user logs
+/// are not touched. The cases verify routed commands, not physical mouse or keyboard input.
+/// </remarks>
 [TestClass]
 public sealed class ApplicationIntegrationTests
 {

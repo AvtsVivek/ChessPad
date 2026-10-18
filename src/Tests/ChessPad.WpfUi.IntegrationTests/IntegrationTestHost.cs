@@ -14,6 +14,14 @@ using Microsoft.Extensions.Logging;
 
 namespace ChessPad.WpfUi.IntegrationTests;
 
+/// <summary>Hosts one integration scenario in a disposable STA process using production application configuration.</summary>
+/// <remarks>
+/// This is the executable entry point selected by the project, not a VSTest fixture. It creates
+/// a real WPF application for lifecycle scenarios or a real provider for rolling checks. Friend
+/// assembly access permits internal App configuration with an isolated output directory; private
+/// container inspection still requires reflection. Failures reach the parent through standard error
+/// and a nonzero exit code. Process isolation avoids WPF singleton reuse between scenarios.
+/// </remarks>
 internal static class IntegrationTestHost
 {
     private const string ExpectedStartupFailure = "Expected integration startup failure";

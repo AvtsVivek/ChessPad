@@ -20,6 +20,10 @@ dotnet build .\src\App\ChessPad.ViewModels\ChessPad.ViewModels.csproj
 
 ## Running unit tests
 
+See [Test projects](testing.md) for the detailed case inventory, project
+configuration, integration-host design, internal access, and troubleshooting.
+The commands and scope below provide a quick development reference.
+
 `src\Tests\ChessPad.ViewModels.Tests\ChessPad.ViewModels.Tests.csproj` uses MSTest
 4.2.3 with VSTest and targets `net10.0`. It references only `ChessPad.ViewModels`;
 no WPF startup, Autofac container, logging provider, network, or filesystem work

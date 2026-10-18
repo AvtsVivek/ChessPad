@@ -1,7 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Windows integration tests for real WPF startup/shutdown, Autofac composition,
+    rendered bindings, and Serilog/NLog output, size rolling, and retention.
+    Requires a desktop-capable Windows environment and dotnet on PATH.
+
+    Run from the repository root:
+      dotnet test .\src\Tests\ChessPad.WpfUi.IntegrationTests\ChessPad.WpfUi.IntegrationTests.csproj
+    Add -c Release to verify Release logging thresholds as well.
+    The project is also included under Tests in src\ChessPad.slnx.
+  -->
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <!--
+      This assembly serves both as a VSTest-discoverable test project and as the
+      child-process host. The parent launches it through dotnet; StartupObject
+      selects the host's STA Main instead of introducing a separate host project.
+      WPF references are needed to run the real application and inspect visuals.
+    -->
     <OutputType>Exe</OutputType>
     <UseWPF>true</UseWPF>
     <StartupObject>ChessPad.WpfUi.IntegrationTests.IntegrationTestHost</StartupObject>
@@ -9,14 +25,23 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- VSTest discovers the parent test methods; child-host assertions use the same MSTest framework. -->
   <ItemGroup>
     <PackageReference Include="MSTest" Version="4.2.3" />
   </ItemGroup>
 
+  <!-- Shares the MSTest assertion and attribute namespace across test and host sources. -->
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+  <!--
+    Exercise the actual application rather than copying its registrations/configuration.
+    ChessPad.WpfUi grants this assembly InternalsVisibleTo access to the provider enum,
+    explicit-directory App constructor, and provider factory. The grant is declared in
+    the production project and follows the assembly name, not this directory path.
+    It exposes internal members to this assembly, but does not expose private members.
+  -->
   <ItemGroup>
     <ProjectReference Include="..\..\App\ChessPad.WpfUi\ChessPad.WpfUi.csproj" />
   </ItemGroup>

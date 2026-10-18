@@ -1,5 +1,7 @@
 namespace ChessPad.ViewModels.Tests;
 
+/// <summary>Tests immutable field coordinates and the checkerboard parity exposed by IsLight.</summary>
+/// <remarks>One data case per row checks all 64 board positions without requiring presentation colors or WPF types.</remarks>
 [TestClass]
 public sealed class FieldViewModelTests
 {
