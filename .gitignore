@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 
+# Copilot session artifacts
+/session-state/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

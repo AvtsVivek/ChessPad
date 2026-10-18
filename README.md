@@ -6,4 +6,8 @@
 
 1. Ref: https://github.com/AvtsVivek/Chess.NET
 
+## Documentation
+
+See the [architecture and dependency injection guide](docs/architecture-and-dependency-injection.md)
+for detailed documentation of the view models, Autofac wiring, and board rendering.
 
