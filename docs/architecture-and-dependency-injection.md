@@ -15,6 +15,7 @@ implement pieces, legal moves, recording, or replay.
 - [Field coordinates and ordering](#field-coordinates-and-ordering)
 - [Dependency injection with Autofac](#dependency-injection-with-autofac)
 - [Startup, ownership, and shutdown](#startup-ownership-and-shutdown)
+- [Application menu and exit command](#application-menu-and-exit-command)
 - [WPF bindings and rendering](#wpf-bindings-and-rendering)
 - [MetroWindow and theme resources](#metrowindow-and-theme-resources)
 - [Building and checking the application](#building-and-checking-the-application)
@@ -316,6 +317,31 @@ view models hold no disposable resources. If resource-owning dependencies are
 added later, choose registrations and scopes deliberately rather than assuming
 that the visual containment hierarchy creates Autofac lifetime scopes.
 
+## Application menu and exit command
+
+A menu above the board provides **Game Menu > Exit**. The outer layout grid
+reserves an automatic-height row for the menu and gives the remaining space to
+the board's `Viewbox`. Menu text therefore stays at normal UI size rather than
+scaling with the board, and the coordinate strips remain part of the board.
+The Exit item's icon is a 16-by-16 `PackIconMaterial` with `Kind="Power"`,
+provided by the existing MahApps.Metro.IconPacks package. It uses the inherited
+foreground rather than a fixed color so it follows the menu's styling.
+
+The Exit item uses WPF's built-in `ApplicationCommands.Close` routed command.
+Its explicit command target is the containing `MainWindow`, which owns a
+`CommandBinding` for that command. This keeps routing deterministic when the
+item is inside the menu's popup. The underscores in `_Game Menu` and `E_xit`
+provide keyboard access keys; no additional keyboard shortcut is advertised.
+
+The window's `OnExitExecuted` handler marks the command as handled and calls
+`Application.Current.Shutdown()`. This exits the application through the normal
+WPF lifecycle, including `App.OnExit` and disposal of the Autofac container;
+it does not terminate the process abruptly.
+
+Menu layout, routed commands, and application shutdown remain in the WPF UI
+project. No application-lifetime service or WPF dependency is added to the
+UI-independent view models for this presentation-only action.
+
 ## WPF bindings and rendering
 
 ### The window's DataContext
@@ -402,6 +428,13 @@ classes observable.
 is `mah:MetroWindow`. Both declarations must describe the same base type because
 they contribute to the same partial class.
 
+The title bar explicitly enables `ShowIconOnTitleBar` and uses a
+`MetroWindow.IconTemplate` containing a `PackIconGameIcons` with
+`Kind="ChessQueen"`. Its dimensions use template bindings, its margin is 4, and
+its foreground uses the dynamic `MahApps.Brushes.IdealForeground` resource to
+follow the active theme. This uses the existing MahApps.Metro.IconPacks package;
+it customizes the title-bar visual, not the executable's embedded icon.
+
 `App.xaml` merges these MahApps resource dictionaries:
 
 ```xml
@@ -440,8 +473,10 @@ A useful manual check is:
 4. Confirm A through H appear left to right along both horizontal edges and
    8 through 1 appear top to bottom along both vertical edges.
 5. Resize the window and confirm that the board remains square and all labels
-   remain centered against their corresponding fields.
-6. Close the window and confirm that the application exits normally.
+   remain centered against their corresponding fields, while the menu stays above
+   the board at normal UI size.
+6. Open **Game Menu**, select **Exit**, and confirm that the application exits
+   normally. Restart and also check the window's standard close button.
 
 For automated verification of this design, check the actual object graph and
 observable results, not only whether individual constructors compile:

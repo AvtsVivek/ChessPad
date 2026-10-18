@@ -2,13 +2,25 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChessPad.WpfUi"
         xmlns:views="clr-namespace:ChessPad.WpfUi.Views"
 		xmlns:viewmodels="clr-namespace:ChessPad.ViewModels;assembly=ChessPad.ViewModels"
 		mc:Ignorable="d"
+		ShowIconOnTitleBar="True"
 		Title="ChessPad" Height="450" Width="800">
+	<mah:MetroWindow.IconTemplate>
+		<DataTemplate>
+			<iconPacks:PackIconGameIcons Width="{TemplateBinding Width}" Height="{TemplateBinding Height}"
+									   Margin="4" Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+									   Kind="ChessQueen" />
+		</DataTemplate>
+	</mah:MetroWindow.IconTemplate>
+	<Window.CommandBindings>
+		<CommandBinding Command="{x:Static ApplicationCommands.Close}" Executed="OnExitExecuted" />
+	</Window.CommandBindings>
 	<Window.Resources>
 		<SolidColorBrush x:Key="WindowBackgroundBrush" Color="{x:Static views:BoardColors.WindowBackground}" />
 		<SolidColorBrush x:Key="BoardFrameBrush" Color="{x:Static views:BoardColors.BoardFrame}" />
@@ -27,7 +39,21 @@
 		</ItemsPanelTemplate>
 	</Window.Resources>
 	<Grid Background="{StaticResource WindowBackgroundBrush}">
-		<Viewbox Margin="10" Stretch="Uniform">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+		<Menu Grid.Row="0">
+			<MenuItem Header="_Game Menu">
+				<MenuItem Header="E_xit" Command="{x:Static ApplicationCommands.Close}"
+						  CommandTarget="{Binding RelativeSource={RelativeSource AncestorType={x:Type views:MainWindow}}}">
+					<MenuItem.Icon>
+						<iconPacks:PackIconMaterial Kind="Power" Width="16" Height="16" />
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+		</Menu>
+		<Viewbox Grid.Row="1" Margin="10" Stretch="Uniform">
 			<Border Width="448" Height="448" Padding="0" Background="{StaticResource BoardFrameBrush}"
 					BorderBrush="{StaticResource BoardFrameBrush}" BorderThickness="8">
 				<Grid>
