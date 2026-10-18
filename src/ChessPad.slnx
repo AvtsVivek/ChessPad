@@ -1,4 +1,10 @@
 <Solution>
-  <Project Path="ChessPad.ViewModels/ChessPad.ViewModels.csproj" />
-  <Project Path="ChessPad.WpfUi/ChessPad.WpfUi.csproj" />
+  <Folder Name="/App/">
+    <Project Path="App/ChessPad.ViewModels/ChessPad.ViewModels.csproj" />
+    <Project Path="App/ChessPad.WpfUi/ChessPad.WpfUi.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/ChessPad.ViewModels.Tests/ChessPad.ViewModels.Tests.csproj" />
+    <Project Path="Tests/ChessPad.WpfUi.IntegrationTests/ChessPad.WpfUi.IntegrationTests.csproj" />
+  </Folder>
 </Solution>

@@ -8,6 +8,6 @@
 
 ## Documentation
 
-See the [architecture and dependency injection guide](docs/architecture-and-dependency-injection.md)
-for detailed documentation of the view models, Autofac wiring, and board rendering.
+See the [documentation index](docs/README.md) for guides covering architecture,
+view models, dependency injection, logging, WPF presentation, and development.
 
