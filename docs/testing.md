@@ -54,8 +54,8 @@ dotnet test .\src\ChessPad.slnx --configuration Release
 ```
 
 In Visual Studio, open `src\ChessPad.slnx`, build, and open **Test > Test
-Explorer**. Select either project or run both. The current suite has **26 data
-cases: 18 unit cases and eight integration cases**. DataRow entries count as
+Explorer**. Select either project or run both. The current suite has **32 data
+cases: 18 unit cases and 14 integration cases**. DataRow entries count as
 separate cases; the number of test methods is smaller. A successful build alone
 is not a passing test run: check discovered, passed, failed, and skipped counts.
 
@@ -138,7 +138,7 @@ There is no extra host project and no command-line test mode in the shipped app.
 
 ### Scenario matrix
 
-Each scenario runs once with Serilog and once with NLog, giving eight cases.
+Each scenario runs once with Serilog and once with NLog, giving 14 cases.
 
 | Scenario | Action | Required outcome |
 |---|---|---|
@@ -146,6 +146,15 @@ Each scenario runs once with Serilog and once with NLog, giving eight cases.
 | `window-close` | Call `Close()` on the displayed main window | Normal exit notifications, exit code 0, disposed container, expected lifecycle logs |
 | `startup-failure` | Throw an expected `InvalidOperationException` from an application Startup subscriber | Original exception propagates, exactly one Fatal event describes startup failure, no first-render event |
 | `rolling` | Seed historical files and emit a payload crossing the actual size threshold | Size archive and current file, expected filename shape, bounded retention, both emitted events preserved |
+| `placement-Normal` | Move and resize the window, close it, reload settings from disk, and open a new window | Normal state and saved position/size restored within 2 WPF units for native pixel rounding |
+| `placement-Maximized` | Maximize the resized window before closing and reopening | Maximized state restored with the original normal restore bounds |
+| `placement-Minimized` | Minimize the resized window before closing and reopening | Reopens normally with the original normal bounds, not minimized |
+
+Placement scenarios exercise MahApps' real native window-placement behavior and
+the production settings class. They keep the application alive explicitly while
+closing the first window and showing a second one; settings are reloaded from
+disk between those windows rather than relying on cached property values.
+The tests do not simulate monitor removal or a DPI change between launches.
 
 The failure scenario explicitly disposes the container in the helper after the
 startup exception. It does not assert that normal application exit occurred or
@@ -236,7 +245,12 @@ not a user-facing configuration switch.
 Each integration case owns a child process and a directory beneath
 `%TEMP%\ChessPad.IntegrationTests` with a unique GUID name. The parent deletes
 that directory in a finally block after execution. It never uses or deletes the
-normal per-user application logs.
+normal per-user application logs. `IsolatedSettingsProvider` redirects every
+property on `MainWindowSettings.Default` to `window-settings.testsettings` inside
+that same directory. The settings framework still serializes and deserializes
+the real property values, including native placement XML, but tests never read
+or overwrite normal per-user window settings. The settings file uses a separate
+extension so the log checks only inspect provider-generated JSON log files.
 
 Standard output and error are read asynchronously to avoid filling a redirected
 pipe while waiting. A 60-second deadline bounds the child execution. On timeout,

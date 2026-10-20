@@ -20,4 +20,16 @@
 		<ProjectReference Include="..\ChessPad.ViewModels\ChessPad.ViewModels.csproj" />
 		<InternalsVisibleTo Include="ChessPad.WpfUi.IntegrationTests" />
 	</ItemGroup>
+	<ItemGroup>
+		<None Update="Views\MainWindowSettings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>MainWindowSettings.Designer.cs</LastGenOutput>
+			<CustomToolNamespace>ChessPad.WpfUi.Views</CustomToolNamespace>
+		</None>
+		<Compile Update="Views\MainWindowSettings.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<DependentUpon>MainWindowSettings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
 </Project>

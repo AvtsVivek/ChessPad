@@ -1,0 +1,71 @@
+<UserControl x:Class="ChessPad.WpfUi.Views.ChessBoardView"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:views="clr-namespace:ChessPad.WpfUi.Views"
+			 xmlns:viewmodels="clr-namespace:ChessPad.ViewModels;assembly=ChessPad.ViewModels">
+	<UserControl.Resources>
+		<SolidColorBrush x:Key="BoardFrameBrush" Color="{x:Static views:BoardColors.BoardFrame}" />
+		<SolidColorBrush x:Key="LightSquareBrush" Color="{x:Static views:BoardColors.LightSquare}" />
+		<SolidColorBrush x:Key="DarkSquareBrush" Color="{x:Static views:BoardColors.DarkSquare}" />
+		<DataTemplate DataType="{x:Type viewmodels:RowColumnLabelViewModel}">
+			<TextBlock Text="{Binding Label}" Foreground="{StaticResource LightSquareBrush}"
+					   FontSize="16" FontWeight="SemiBold"
+					   HorizontalAlignment="Center" VerticalAlignment="Center" />
+		</DataTemplate>
+		<ItemsPanelTemplate x:Key="RowLabelPanel">
+			<UniformGrid Rows="8" Columns="1" />
+		</ItemsPanelTemplate>
+		<ItemsPanelTemplate x:Key="ColumnLabelPanel">
+			<UniformGrid Rows="1" Columns="8" />
+		</ItemsPanelTemplate>
+	</UserControl.Resources>
+	<Viewbox Margin="10" Stretch="Uniform">
+		<Border Width="{x:Static viewmodels:BoardConstants.FullBoardLength}"
+				Height="{x:Static viewmodels:BoardConstants.FullBoardLength}" Padding="0"
+				Background="{StaticResource BoardFrameBrush}" BorderBrush="{StaticResource BoardFrameBrush}">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="{Binding Source={x:Static viewmodels:BoardConstants.LabelHeight}, Mode=OneTime}" />
+					<RowDefinition Height="*" />
+					<RowDefinition Height="{Binding Source={x:Static viewmodels:BoardConstants.LabelHeight}, Mode=OneTime}" />
+				</Grid.RowDefinitions>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="{Binding Source={x:Static viewmodels:BoardConstants.LabelWidth}, Mode=OneTime}" />
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="{Binding Source={x:Static viewmodels:BoardConstants.LabelWidth}, Mode=OneTime}" />
+				</Grid.ColumnDefinitions>
+				<ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColumnLabels}"
+							  ItemsPanel="{StaticResource ColumnLabelPanel}" />
+				<ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ColumnLabels}"
+							  ItemsPanel="{StaticResource ColumnLabelPanel}" />
+				<ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding RowLabels}"
+							  ItemsPanel="{StaticResource RowLabelPanel}" />
+				<ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding RowLabels}"
+							  ItemsPanel="{StaticResource RowLabelPanel}" />
+				<ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Fields}">
+					<ItemsControl.ItemsPanel>
+						<ItemsPanelTemplate>
+							<UniformGrid Rows="8" Columns="8" />
+						</ItemsPanelTemplate>
+					</ItemsControl.ItemsPanel>
+					<ItemsControl.ItemTemplate>
+						<DataTemplate DataType="{x:Type viewmodels:FieldViewModel}">
+							<Border>
+								<Border.Style>
+									<Style TargetType="Border">
+										<Setter Property="Background" Value="{StaticResource DarkSquareBrush}" />
+										<Style.Triggers>
+											<DataTrigger Binding="{Binding IsLight}" Value="True">
+												<Setter Property="Background" Value="{StaticResource LightSquareBrush}" />
+											</DataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Border.Style>
+							</Border>
+						</DataTemplate>
+					</ItemsControl.ItemTemplate>
+				</ItemsControl>
+			</Grid>
+		</Border>
+	</Viewbox>
+</UserControl>

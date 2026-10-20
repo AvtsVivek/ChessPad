@@ -6,10 +6,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChessPad.WpfUi"
-        xmlns:views="clr-namespace:ChessPad.WpfUi.Views"
-		xmlns:viewmodels="clr-namespace:ChessPad.ViewModels;assembly=ChessPad.ViewModels"
+		xmlns:views="clr-namespace:ChessPad.WpfUi.Views"
 		mc:Ignorable="d"
 		ShowIconOnTitleBar="True"
+		SaveWindowPosition="True"
 		Title="ChessPad" Height="450" Width="800">
 	<mah:MetroWindow.IconTemplate>
 		<DataTemplate>
@@ -25,18 +25,6 @@
 		<SolidColorBrush x:Key="WindowBackgroundBrush" Color="{x:Static views:BoardColors.WindowBackground}" />
 		<SolidColorBrush x:Key="BoardFrameBrush" Color="{x:Static views:BoardColors.BoardFrame}" />
 		<SolidColorBrush x:Key="LightSquareBrush" Color="{x:Static views:BoardColors.LightSquare}" />
-		<SolidColorBrush x:Key="DarkSquareBrush" Color="{x:Static views:BoardColors.DarkSquare}" />
-		<DataTemplate DataType="{x:Type viewmodels:RowColumnLabelViewModel}">
-			<TextBlock Text="{Binding Label}" Foreground="{StaticResource LightSquareBrush}"
-					   FontSize="16" FontWeight="SemiBold"
-					   HorizontalAlignment="Center" VerticalAlignment="Center" />
-		</DataTemplate>
-		<ItemsPanelTemplate x:Key="RowLabelPanel">
-			<UniformGrid Rows="8" Columns="1" />
-		</ItemsPanelTemplate>
-		<ItemsPanelTemplate x:Key="ColumnLabelPanel">
-			<UniformGrid Rows="1" Columns="8" />
-		</ItemsPanelTemplate>
 	</Window.Resources>
 	<Grid Background="{StaticResource WindowBackgroundBrush}">
 		<Grid.RowDefinitions>
@@ -53,53 +41,18 @@
 				</MenuItem>
 			</MenuItem>
 		</Menu>
-		<Viewbox Grid.Row="1" Margin="10" Stretch="Uniform">
-			<Border Width="448" Height="448" Padding="0" Background="{StaticResource BoardFrameBrush}"
-					BorderBrush="{StaticResource BoardFrameBrush}" BorderThickness="8">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="24" />
-						<RowDefinition Height="*" />
-						<RowDefinition Height="24" />
-					</Grid.RowDefinitions>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="24" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="24" />
-					</Grid.ColumnDefinitions>
-					<ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ChessBoard.ColumnLabels}"
-								  ItemsPanel="{StaticResource ColumnLabelPanel}" />
-					<ItemsControl Grid.Row="2" Grid.Column="1" ItemsSource="{Binding ChessBoard.ColumnLabels}"
-								  ItemsPanel="{StaticResource ColumnLabelPanel}" />
-					<ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ChessBoard.RowLabels}"
-								  ItemsPanel="{StaticResource RowLabelPanel}" />
-					<ItemsControl Grid.Row="1" Grid.Column="2" ItemsSource="{Binding ChessBoard.RowLabels}"
-								  ItemsPanel="{StaticResource RowLabelPanel}" />
-					<ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding ChessBoard.Fields}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="8" Columns="8" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type viewmodels:FieldViewModel}">
-                                <Border>
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{StaticResource DarkSquareBrush}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsLight}" Value="True">
-                                                    <Setter Property="Background" Value="{StaticResource LightSquareBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </Grid>
-            </Border>
-        </Viewbox>
+		<Grid Grid.Row="1">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition x:Name="ChessGameColumn" Width="*" />
+			<ColumnDefinition Width="5" />
+			<ColumnDefinition x:Name="SidePanelColumn" Width="*" />
+		</Grid.ColumnDefinitions>
+		<views:ChessBoardView Grid.Column="0" DataContext="{Binding ChessBoard}" />
+        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" DragCompleted="VerticalGridSplitter_DragCompleted" />
+        <Border Grid.Column="2" Background="{StaticResource BoardFrameBrush}">
+            <TextBlock Text="Game information" Foreground="{StaticResource LightSquareBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" />
+        </Border>
+        </Grid>
     </Grid>
 </mah:MetroWindow>

@@ -60,9 +60,11 @@ dotnet test .\src\ChessPad.slnx
 dotnet test .\src\ChessPad.slnx --configuration Release
 ```
 
-The eight integration cases exercise four scenarios for each of Serilog and
-NLog: menu Exit, standard window close, startup failure, and file rolling with
-retention. The lifecycle scenarios also verify the real Autofac registrations,
+The 14 integration cases exercise seven scenarios for each of Serilog and
+NLog: menu Exit, standard window close, startup failure, file rolling with
+retention, and window placement after closing in normal, maximized, or minimized
+state. Placement checks reload settings from disk and verify a new window's
+position, size, and state. The lifecycle scenarios also verify the real Autofac registrations,
 typed logger resolution, board binding, 32 rendered coordinate labels, first
 render logging, structured properties, and session/category metadata. Successful
 shutdown must dispose the container and release the log files. Startup failure
@@ -71,7 +73,7 @@ builds. Rolling checks cross the real 10 MiB threshold and seed 20 historical
 files to verify retention limits, removal of the oldest files, and preservation
 of recent files.
 
-The suite contains 26 cases in total: 18 unit cases and eight integration cases.
+The suite contains 32 cases in total: 18 unit cases and 14 integration cases.
 
 ### Process and filesystem isolation
 
@@ -84,6 +86,8 @@ additional host project or runtime test mode is added to the shipped app.
 Each child receives an explicit provider and a uniquely named directory beneath
 `%TEMP%\ChessPad.IntegrationTests`. The directory is deleted after the child
 exits. Normal `%LOCALAPPDATA%\ChessPad\Logs` files are never used or deleted.
+A test-only settings provider also redirects the production window settings to
+that directory, preserving serialization without touching normal user settings.
 A 60-second timeout terminates only that case's child process tree and reports
 its captured standard output and error. Assertions in the child produce a
 nonzero process result; the parent requires both success and a completion marker.
@@ -124,8 +128,9 @@ constructors compile:
 - Confirm that field and label factory calls produce distinct object instances.
 - Check that each label collection contains exactly eight entries, with indices
   0 through 7, rank text `87654321`, and file text `ABCDEFGH`.
-- Confirm that `MainWindow.DataContext` is a `ChessPadViewModel` and that the
-  board `ItemsControl.ItemsSource` refers to its `ChessBoard.Fields` collection.
+- Confirm that `MainWindow.DataContext` is a `ChessPadViewModel`, that
+  `ChessBoardView.DataContext` is its existing `ChessBoard` instance, and that the
+  board `ItemsControl.ItemsSource` refers to that board's `Fields` collection.
 - Verify all 32 rendered labels across the four edges, including their text and
   center alignment with fields at multiple window sizes.
 
@@ -168,7 +173,7 @@ and [logging](logging.md) for provider-independent event calls.
 |---|---|
 | Autofac cannot resolve a window or view model | Confirm that its concrete type and all constructor dependencies are registered in `App.xaml.cs`. |
 | Autofac cannot supply the field coordinates | Confirm that the board receives `FieldViewModel.Factory` and that its parameters exactly match the record constructor's `Row` and `Column` names. |
-| The window opens but the board is empty | Check `MainWindow.DataContext`, the `ChessBoard.Fields` binding path, and the field count. Inspect WPF binding diagnostics for path errors. |
+| The window opens but the board is empty | Check `MainWindow.DataContext`, the control's `DataContext="{Binding ChessBoard}"`, its internal `Fields` binding, and the field count. Inspect WPF binding diagnostics for path errors. |
 | XAML reports an unknown field type | Check the `viewmodels` namespace, the public `FieldViewModel` declaration, and any C# compilation errors. |
 | The Metro window has missing resources or unexpected styling | Check the MahApps package reference and all three merged resource dictionaries in `App.xaml`. |
 | XAML-generated code reports conflicting base classes | Ensure the XAML root is `mah:MetroWindow` and the code-behind derives from `MetroWindow`. |

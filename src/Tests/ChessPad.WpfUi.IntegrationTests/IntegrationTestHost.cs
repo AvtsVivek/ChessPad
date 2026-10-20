@@ -17,7 +17,8 @@ namespace ChessPad.WpfUi.IntegrationTests;
 /// <summary>Hosts one integration scenario in a disposable STA process using production application configuration.</summary>
 /// <remarks>
 /// This is the executable entry point selected by the project, not a VSTest fixture. It creates
-/// a real WPF application for lifecycle scenarios or a real provider for rolling checks. Friend
+/// a real WPF application for lifecycle and placement scenarios or a real provider for rolling checks.
+/// A test-only provider redirects user settings to the isolated output directory. Friend
 /// assembly access permits internal App configuration with an isolated output directory; private
 /// container inspection still requires reflection. Failures reach the parent through standard error
 /// and a nonzero exit code. Process isolation avoids WPF singleton reuse between scenarios.
@@ -42,9 +43,14 @@ internal static class IntegrationTestHost
             string scenario = args[1];
             string directory = args[2];
             Directory.CreateDirectory(directory);
+            IsolatedSettingsProvider.Install(directory);
             if (scenario == "rolling")
             {
                 VerifyRolling(provider, directory);
+            }
+            else if (scenario.StartsWith("placement-", StringComparison.Ordinal))
+            {
+                VerifyWindowPlacement(provider, Enum.Parse<WindowState>(scenario["placement-".Length..]), directory);
             }
             else
             {
@@ -58,6 +64,62 @@ internal static class IntegrationTestHost
             Console.Error.WriteLine(exception);
             return 1;
         }
+    }
+
+    /// <summary>Verifies native placement is saved to disk and restored to a newly created window.</summary>
+    /// <param name="provider">The logging backend used by the application instance.</param>
+    /// <param name="state">The display state in which the first window is closed.</param>
+    /// <param name="directory">The isolated directory for settings and logs.</param>
+    private static void VerifyWindowPlacement(App.LoggingProvider provider, WindowState state, string directory)
+    {
+        var app = new App(provider, directory);
+        app.InitializeComponent();
+        app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        app.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+        {
+            var window = Assert.IsInstanceOfType<MainWindow>(app.MainWindow);
+            Assert.IsTrue(window.SaveWindowPosition);
+            Assert.AreSame(MainWindowSettings.Default, window.GetWindowPlacementSettings());
+            Assert.AreEqual(800d, window.Width, 1d, "Default width after native pixel rounding");
+            Assert.AreEqual(450d, window.Height, 1d, "Default height after native pixel rounding");
+            var workArea = SystemParameters.WorkArea;
+            window.Left = workArea.Left + 40;
+            window.Top = workArea.Top + 40;
+            window.Width = Math.Min(640, workArea.Width - 80);
+            window.Height = Math.Min(360, workArea.Height - 80);
+            window.UpdateLayout();
+            var expectedBounds = new Rect(window.Left, window.Top, window.Width, window.Height);
+            window.WindowState = state;
+            window.UpdateLayout();
+            var viewModel = Assert.IsInstanceOfType<ChessPadViewModel>(window.DataContext);
+            window.Close();
+
+            var saved = MainWindowSettings.Default.Placement;
+            Assert.IsNotNull(saved);
+            Assert.IsGreaterThan(0, saved.normalPosition.Width);
+            Assert.IsGreaterThan(0, saved.normalPosition.Height);
+            MainWindowSettings.Default.Reload();
+            Assert.AreNotSame(saved, MainWindowSettings.Default.Placement);
+            Assert.AreEqual(saved.normalPosition, MainWindowSettings.Default.Placement.normalPosition);
+            Assert.AreEqual(saved.showCmd, MainWindowSettings.Default.Placement.showCmd);
+
+            var restored = new MainWindow(viewModel);
+            app.MainWindow = restored;
+            restored.Show();
+            app.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
+            {
+                Assert.AreEqual(state == WindowState.Maximized ? WindowState.Maximized : WindowState.Normal,
+                    restored.WindowState);
+                var actualBounds = restored.RestoreBounds;
+                Assert.AreEqual(expectedBounds.Left, actualBounds.Left, 2d, "Restored horizontal position");
+                Assert.AreEqual(expectedBounds.Top, actualBounds.Top, 2d, "Restored vertical position");
+                Assert.AreEqual(expectedBounds.Width, actualBounds.Width, 2d, "Restored normal width");
+                Assert.AreEqual(expectedBounds.Height, actualBounds.Height, 2d, "Restored normal height");
+                restored.Close();
+                app.Shutdown();
+            }));
+        }));
+        Assert.AreEqual(0, app.Run());
     }
 
     /// <summary>Exercises the real application lifecycle and verifies its composition, structured logs, and cleanup.</summary>
@@ -194,11 +256,13 @@ internal static class IntegrationTestHost
         var label = container.Resolve<RowColumnLabelViewModel.Factory>()(3, "D");
         Assert.AreEqual(3, label.Index);
         Assert.AreEqual("D", label.Label);
-        var fields = Descendants(window).OfType<ItemsControl>().Single(control =>
-            BindingOperations.GetBinding(control, ItemsControl.ItemsSourceProperty)?.Path.Path == "ChessBoard.Fields");
+        var boardView = Descendants(window).OfType<ChessBoardView>().Single();
+        Assert.AreSame(board, boardView.DataContext);
+        var fields = Descendants(boardView).OfType<ItemsControl>().Single(control =>
+            BindingOperations.GetBinding(control, ItemsControl.ItemsSourceProperty)?.Path.Path == "Fields");
         Assert.AreSame(board.Fields, fields.ItemsSource);
         Assert.HasCount(64, fields.Items);
-        var texts = Descendants(window).OfType<TextBlock>()
+        var texts = Descendants(boardView).OfType<TextBlock>()
             .Where(text => text.DataContext is RowColumnLabelViewModel).ToArray();
         Assert.HasCount(32, texts);
         foreach (var text in texts)

@@ -21,17 +21,27 @@ the window and view models are resolved.
 
 ## Binding to the composed board
 
-The board's items source is:
+`MainWindow` directly hosts a board user control:
 
 ```xml
-<ItemsControl ItemsSource="{Binding ChessBoard.Fields}">
+<views:ChessBoardView Grid.Column="0" DataContext="{Binding ChessBoard}" />
 ```
 
-WPF reads `ChessBoard` from the window's `ChessPadViewModel`, then reads `Fields`
-from the board. An 8-row, 8-column `UniformGrid` arranges the 64 items in their
-collection order.
+`ChessBoardView` owns the entire board `Viewbox`, frame, square templates, and
+coordinate-label resources. It receives the existing `ChessBoardViewModel`
+from the window's DI-composed model; its constructor only loads XAML and never
+creates or resolves a view model. The window retains the menu, splitter, side
+panel, and window/column persistence.
 
-Because the view models live in a separate assembly, the window declares:
+Inside the control, the board's items source is:
+
+```xml
+<ItemsControl ItemsSource="{Binding Fields}">
+```
+
+An 8-row, 8-column `UniformGrid` arranges the 64 items in their collection order.
+
+Because the view models live in a separate assembly, the board control declares:
 
 ```xml
 xmlns:viewmodels="clr-namespace:ChessPad.ViewModels;assembly=ChessPad.ViewModels"
@@ -59,29 +69,75 @@ Each field template uses a `Border` with a dark background by default. A
 Window, frame, light-field, and dark-field brushes reference `BoardColors`.
 
 A `Viewbox` with `Stretch="Uniform"` scales the fixed-size board container while
-preserving its aspect ratio. The container is 448 by 448 units, includes an
-8-unit border, and sits inside the viewbox with a margin of 10. A three-by-three
-layout grid reserves a 24-unit strip on each edge for labels, leaving the field
-area at 384 by 384 units. Each label strip uses an eight-cell `UniformGrid`, so
+preserving its aspect ratio. `BoardConstants` defines the LabelWidth + (SquareSize * 8) + LabelWidth-by-LabelHeight + (SquareSize * 8) + LabelHeight-unit container
+and LabelWidth-unit label strips, leaving a (SquareSize * 8)-by-(SquareSize * 8)-unit field area with no additional
+border thickness. The viewbox has a margin of 10. A three-by-three layout grid
+reserves a label strip on each edge. Row heights and column widths use one-time
+bindings to the numeric constants so WPF converts them to `GridLength` values;
+direct `x:Static` assignment supplies a `double` and fails during XAML loading.
 label centers align with field centers while resizing.
 
 An implicit `RowColumnLabelViewModel` data template renders centered text using
 the existing light-field brush against the dark board frame. Field templates
 continue to use their existing background trigger; no label overlays a field.
 
-The left and right strips bind to `ChessBoard.RowLabels`; the top and bottom
-strips bind to `ChessBoard.ColumnLabels`. See
+Within `ChessBoardView`, the left and right strips bind to `RowLabels`; the
+top and bottom strips bind to `ColumnLabels`. See
 [view models and coordinates](view-models.md#rank-and-file-labels) for label
 ordering and the relationship between display positions and chess notation.
 See [change notifications](view-models.md#change-notifications) before adding
 state that changes after the board is displayed.
 
+## Splitter and saved column widths
+
+Below the menu, a three-column grid contains the board's `Viewbox`, a 5-unit
+vertical `GridSplitter`, and a placeholder game-information panel. Both content
+columns initially use `*` widths. Completing a splitter drag saves both column
+widths; the window constructor restores them on subsequent launches.
+
+`Views\MainWindowSettings.settings` defines the user-scoped string settings
+`ChessGameColumnWidth` and `SidePanelColumnWidth`, both initially empty.
+`GridLengthConverter` converts between these strings and WPF column widths.
+The settings use `ApplicationSettingsBase.Save()` to persist per-user values
+in `user.config`, not in the repository or application installation folder.
+The settings class namespace and property names are preserved so existing
+saved widths remain compatible.
+
+Open the `.settings` file in Visual Studio's Settings designer to edit the
+settings. Its `SettingsSingleFileGenerator` custom tool updates the nested
+`MainWindowSettings.Designer.cs`; do not edit that generated file directly.
+Commit both files so command-line builds need not run the Visual Studio custom
+tool. The project explicitly sets the generated namespace to
+`ChessPad.WpfUi.Views` so regenerating retains the existing settings identity.
+
+## Saved window size and location
+
+`MainWindow` enables MahApps.Metro's `SaveWindowPosition`. Its
+`GetWindowPlacementSettings()` override returns the same designer-backed
+`MainWindowSettings` instance used by the splitter. A small non-generated
+partial class implements `IWindowPlacementSettings`, leaving the designer free
+to regenerate its accessors.
+
+The user-scoped `Placement` setting stores the native `WINDOWPLACEMENT`
+structure: the normal window size and location, plus the display state. MahApps
+restores the placement at startup and saves it during normal window shutdown,
+including **Game Menu > Exit**. Maximized windows reopen maximized while retaining
+their normal restore bounds; minimized windows reopen normally rather than
+remaining minimized. The first launch keeps the XAML defaults of 800 by 450.
+MahApps also handles placement correction when the monitor layout changes.
+
+`UpgradeSettings` is the boolean required by MahApps' placement-settings
+contract. It defaults to `False`, matching MahApps' default and leaving automatic
+settings migration between application versions disabled. No separate manual
+move, resize, or close handlers compete with MahApps placement persistence.
+
 ## Application menu and exit command
 
-A menu above the board provides **Game Menu > Exit**. The outer layout grid
+A menu above the board provides **Game Menu > Exit**.
 reserves an automatic-height row for the menu and gives the remaining space to
-the board's `Viewbox`. Menu text therefore stays at normal UI size rather than
-scaling with the board, and the coordinate strips remain part of the board.
+the board/splitter/panel layout. Menu text therefore stays at normal UI size
+rather than scaling with the board, and the coordinate strips remain part of
+the board.
 The Exit item's icon is a 16-by-16 `PackIconMaterial` with `Kind="Power"`,
 provided by the existing MahApps.Metro.IconPacks package. It uses the inherited
 foreground rather than a fixed color so it follows the menu's styling.
