@@ -160,7 +160,7 @@ namespace ChessPad.WpfUi
         {
             _loggingProvider = CreateLoggingProvider(provider, logDirectory);
             _loggerFactory = LoggerFactory.Create(builder => builder
-                .SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace)
+                .SetMinimumLevel(LogLevel.Trace)
                 .AddProvider(_loggingProvider));
             _logger = _loggerFactory.CreateLogger<App>();
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -175,6 +175,8 @@ namespace ChessPad.WpfUi
                 builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).SingleInstance();
                 builder.RegisterType<MainWindow>().AsSelf();
                 builder.RegisterType<ChessPadViewModel>().AsSelf();
+                builder.RegisterType<MovesPanelViewModel>().AsSelf();
+                builder.RegisterType<BoardColorsSettingsViewModel>().AsSelf();
                 builder.RegisterType<ChessBoardViewModel>().AsSelf();
                 builder.RegisterType<FieldViewModel>().AsSelf();
                 builder.RegisterType<RowColumnLabelViewModel>().AsSelf();

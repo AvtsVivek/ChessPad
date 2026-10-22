@@ -20,19 +20,19 @@
 		</ItemsPanelTemplate>
 	</UserControl.Resources>
 	<Viewbox Margin="10" Stretch="Uniform">
-		<Border Width="{x:Static viewmodels:BoardConstants.FullBoardLength}"
-				Height="{x:Static viewmodels:BoardConstants.FullBoardLength}" Padding="0"
+		<Border Width="{x:Static views:BoardLayoutConstants.FullBoardLength}"
+				Height="{x:Static views:BoardLayoutConstants.FullBoardLength}" Padding="0"
 				Background="{StaticResource BoardFrameBrush}" BorderBrush="{StaticResource BoardFrameBrush}">
 			<Grid>
 				<Grid.RowDefinitions>
-					<RowDefinition Height="{Binding Source={x:Static viewmodels:BoardConstants.LabelHeight}, Mode=OneTime}" />
+					<RowDefinition Height="{Binding Source={x:Static views:BoardLayoutConstants.LabelHeight}, Mode=OneTime}" />
 					<RowDefinition Height="*" />
-					<RowDefinition Height="{Binding Source={x:Static viewmodels:BoardConstants.LabelHeight}, Mode=OneTime}" />
+					<RowDefinition Height="{Binding Source={x:Static views:BoardLayoutConstants.LabelHeight}, Mode=OneTime}" />
 				</Grid.RowDefinitions>
 				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="{Binding Source={x:Static viewmodels:BoardConstants.LabelWidth}, Mode=OneTime}" />
+					<ColumnDefinition Width="{Binding Source={x:Static views:BoardLayoutConstants.LabelWidth}, Mode=OneTime}" />
 					<ColumnDefinition Width="*" />
-					<ColumnDefinition Width="{Binding Source={x:Static viewmodels:BoardConstants.LabelWidth}, Mode=OneTime}" />
+					<ColumnDefinition Width="{Binding Source={x:Static views:BoardLayoutConstants.LabelWidth}, Mode=OneTime}" />
 				</Grid.ColumnDefinitions>
 				<ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding ColumnLabels}"
 							  ItemsPanel="{StaticResource ColumnLabelPanel}" />

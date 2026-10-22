@@ -165,11 +165,43 @@ internal static class IntegrationTestHost
                 VerifyCompositionAndBinding(window, container);
                 if (scenario == "menu-exit")
                 {
+                    var viewModel = Assert.IsInstanceOfType<ChessPadViewModel>(window.DataContext);
+                    var sidePanel = Descendants(window).OfType<ContentControl>().Single(control =>
+                        BindingOperations.GetBinding(control, ContentControl.ContentProperty)?.Path.Path == "ActiveSidePanel");
+                    Assert.AreSame(viewModel.ActiveSidePanel, sidePanel.Content);
+                    Assert.IsInstanceOfType<MovesPanelView>(Descendants(sidePanel).Single(child => child is MovesPanelView));
+
                     var menu = Descendants(window).OfType<Menu>().Single();
                     var gameMenu = Assert.IsInstanceOfType<MenuItem>(menu.Items[0]);
                     gameMenu.IsSubmenuOpen = true;
                     window.UpdateLayout();
-                    var exit = Assert.IsInstanceOfType<MenuItem>(gameMenu.Items[0]);
+                    var moves = Assert.IsInstanceOfType<MenuItem>(gameMenu.Items[0]);
+                    Assert.AreEqual("_Moves", moves.Header);
+                    Assert.AreSame(viewModel.ShowMovesCommand, moves.Command);
+
+                    var settingsMenu = Assert.IsInstanceOfType<MenuItem>(menu.Items[1]);
+                    Assert.AreEqual("_Settings", settingsMenu.Header);
+                    settingsMenu.IsSubmenuOpen = true;
+                    window.UpdateLayout();
+                    var boardColors = Assert.IsInstanceOfType<MenuItem>(settingsMenu.Items[0]);
+                    Assert.AreEqual("_Board Colors", boardColors.Header);
+                    Assert.AreSame(viewModel.ShowBoardColorsCommand, boardColors.Command);
+                    Assert.IsTrue(boardColors.IsEnabled);
+                    boardColors.Command.Execute(boardColors.CommandParameter);
+                    window.UpdateLayout();
+                    Assert.AreSame(viewModel.ActiveSidePanel, sidePanel.Content);
+                    Assert.IsInstanceOfType<BoardColorsSettingsView>(
+                        Descendants(sidePanel).Single(child => child is BoardColorsSettingsView));
+
+                    moves.Command.Execute(moves.CommandParameter);
+                    window.UpdateLayout();
+                    Assert.AreSame(viewModel.ActiveSidePanel, sidePanel.Content);
+                    Assert.IsInstanceOfType<MovesPanelView>(
+                        Descendants(sidePanel).Single(child => child is MovesPanelView));
+
+                    gameMenu.IsSubmenuOpen = true;
+                    window.UpdateLayout();
+                    var exit = Assert.IsInstanceOfType<MenuItem>(gameMenu.Items[1]);
                     Assert.AreEqual("E_xit", exit.Header);
                     Assert.AreSame(ApplicationCommands.Close, exit.Command);
                     Assert.AreSame(window, exit.CommandTarget);

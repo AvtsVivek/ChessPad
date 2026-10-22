@@ -37,8 +37,8 @@ dotnet test .\src\ChessPad.slnx
 ```
 
 In Visual Studio, open `src\ChessPad.slnx` and run `ChessPad.ViewModels.Tests`
-from Test Explorer. The initial suite contains 18 cases, including data-driven
-cases, covering:
+from Test Explorer. The suite contains 19 cases, including data-driven cases,
+covering:
 
 - All 64 coordinate pairs in row-major order.
 - The expected checkerboard colors across all eight rows.
@@ -73,7 +73,7 @@ builds. Rolling checks cross the real 10 MiB threshold and seed 20 historical
 files to verify retention limits, removal of the oldest files, and preservation
 of recent files.
 
-The suite contains 32 cases in total: 18 unit cases and 14 integration cases.
+The suite contains 33 cases in total: 19 unit cases and 14 integration cases.
 
 ### Process and filesystem isolation
 

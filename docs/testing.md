@@ -54,8 +54,8 @@ dotnet test .\src\ChessPad.slnx --configuration Release
 ```
 
 In Visual Studio, open `src\ChessPad.slnx`, build, and open **Test > Test
-Explorer**. Select either project or run both. The current suite has **32 data
-cases: 18 unit cases and 14 integration cases**. DataRow entries count as
+Explorer**. Select either project or run both. The current suite has **33 data
+cases: 19 unit cases and 14 integration cases**. DataRow entries count as
 separate cases; the number of test methods is smaller. A successful build alone
 is not a passing test run: check discovered, passed, failed, and skipped counts.
 
@@ -78,7 +78,7 @@ startup, filesystem access, network access, or shared container state.
 | File | Data cases | Verified behavior |
 |---|---:|---|
 | `ChessBoardViewModelTests.cs` | 5 | Complete row-major coordinates; field factory calls and identity; all rank/file labels and indices; label factory calls and identity; rejected collection mutations |
-| `ChessPadViewModelTests.cs` | 1 | The application model exposes the exact injected board instance |
+| `ChessPadViewModelTests.cs` | 2 | The application model preserves its injected board and notifies when side-panel commands change the active panel |
 | `FieldViewModelTests.cs` | 8 | One case per row verifies stored coordinates and light/dark parity across all 64 fields |
 | `RowColumnLabelViewModelTests.cs` | 4 | Rank/file endpoints preserve the supplied index and text |
 

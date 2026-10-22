@@ -69,9 +69,13 @@ Each field template uses a `Border` with a dark background by default. A
 Window, frame, light-field, and dark-field brushes reference `BoardColors`.
 
 A `Viewbox` with `Stretch="Uniform"` scales the fixed-size board container while
-preserving its aspect ratio. `BoardConstants` defines the LabelWidth + (SquareSize * 8) + LabelWidth-by-LabelHeight + (SquareSize * 8) + LabelHeight-unit container
-and LabelWidth-unit label strips, leaving a (SquareSize * 8)-by-(SquareSize * 8)-unit field area with no additional
-border thickness. The viewbox has a margin of 10. A three-by-three layout grid
+preserving its aspect ratio. `Views\BoardLayoutConstants.cs` in `ChessPad.WpfUi`
+defines these presentation-only dimensions alongside `BoardColors`, rather than
+making the view-model library responsible for a particular view's sizing.
+The public static class is referenced through `views:BoardLayoutConstants` in
+XAML. Its 20-unit coordinate strips and 50-unit squares form a 440-by-440-unit
+container with a 400-by-400-unit field area and no additional border thickness.
+The viewbox has a margin of 10. A three-by-three layout grid
 reserves a label strip on each edge. Row heights and column widths use one-time
 bindings to the numeric constants so WPF converts them to `GridLength` values;
 direct `x:Static` assignment supplies a `double` and fails during XAML loading.
@@ -88,12 +92,25 @@ ordering and the relationship between display positions and chess notation.
 See [change notifications](view-models.md#change-notifications) before adding
 state that changes after the board is displayed.
 
-## Splitter and saved column widths
+## Dynamic side panel
 
-Below the menu, a three-column grid contains the board's `Viewbox`, a 5-unit
-vertical `GridSplitter`, and a placeholder game-information panel. Both content
-columns initially use `*` widths. Completing a splitter drag saves both column
-widths; the window constructor restores them on subsequent launches.
+Below the menu, a three-column grid contains `ChessBoardView`, a 5-unit
+vertical `GridSplitter`, and a `ContentControl` bound to
+`ChessPadViewModel.ActiveSidePanel`. The view model uses CommunityToolkit.Mvvm's
+`ObservableObject`, `[ObservableProperty]`, and `[RelayCommand]`; changing the
+active panel raises `PropertyChanged`, so the content control updates without
+code-behind navigation.
+
+Implicit data templates map `MovesPanelViewModel` to `MovesPanelView` and
+`BoardColorsSettingsViewModel` to `BoardColorsSettingsView`. The active panel is
+typed to their shared `SidePanelViewModel` base class rather than `object`. The
+Moves panel is selected initially and provides the destination for move history
+when game behavior is added. **Game Menu > Moves** selects it; **Settings > Board
+Colors** selects the palette panel. The palette panel currently displays the
+existing colors as swatches; changing palette values is not yet supported.
+Both content columns initially use `*` widths. Completing a splitter drag
+saves both column widths; the window constructor restores them on subsequent
+launches.
 
 `Views\MainWindowSettings.settings` defines the user-scoped string settings
 `ChessGameColumnWidth` and `SidePanelColumnWidth`, both initially empty.
@@ -133,11 +150,11 @@ move, resize, or close handlers compete with MahApps placement persistence.
 
 ## Application menu and exit command
 
-A menu above the board provides **Game Menu > Exit**.
-reserves an automatic-height row for the menu and gives the remaining space to
-the board/splitter/panel layout. Menu text therefore stays at normal UI size
-rather than scaling with the board, and the coordinate strips remain part of
-the board.
+A menu above the board provides **Game Menu > Moves**, **Game Menu > Exit**,
+and **Settings > Board Colors**. The outer layout grid reserves an
+automatic-height row for the menu and gives the remaining space to the
+board/splitter/panel layout. Menu text remains at normal UI size rather than
+scaling with the board, and the coordinate strips remain part of the board.
 The Exit item's icon is a 16-by-16 `PackIconMaterial` with `Kind="Power"`,
 provided by the existing MahApps.Metro.IconPacks package. It uses the inherited
 foreground rather than a fixed color so it follows the menu's styling.
@@ -145,8 +162,9 @@ foreground rather than a fixed color so it follows the menu's styling.
 The Exit item uses WPF's built-in `ApplicationCommands.Close` routed command.
 Its explicit command target is the containing `MainWindow`, which owns a
 `CommandBinding` for that command. This keeps routing deterministic when the
-item is inside the menu's popup. The underscores in `_Game Menu` and `E_xit`
-provide keyboard access keys; no additional keyboard shortcut is advertised.
+item is inside the menu's popup. Underscores in `_Game Menu`, `_Moves`,
+`E_xit`, `_Settings`, and `_Board Colors` provide keyboard access keys; no
+additional keyboard shortcut is advertised.
 
 The window's `OnExitExecuted` handler marks the command as handled and calls
 `Application.Current.Shutdown()`. This exits the application through the normal

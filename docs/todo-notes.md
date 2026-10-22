@@ -17,6 +17,7 @@
 • How they are labeled: There are eight files, lettered a through h (from left to right from White's perspective).
 • Key examples: The "e-file" is the column where the Kings start, and the "d-file" is where the Queens start.
 
+![Chess Board](images/50_50_Final.png)
 
 1. In the context of RowColumnLabelViewModel the following is some explanation.
 
